@@ -97,7 +97,7 @@ func resolveFile(f string, no *NameOptions, lo *LocalOptions, opt ...build.Optio
 	}
 
 	if lo.Local || repoName == publish.LocalDomain {
-		pub = publish.NewDaemon(daemon.WriteOptions{}, namer, []string{})
+		pub = publish.NewDaemon(daemon.WriteOptions{})
 	} else {
 		_, err := name.NewRepository(repoName, name.WeakValidation)
 		if err != nil {

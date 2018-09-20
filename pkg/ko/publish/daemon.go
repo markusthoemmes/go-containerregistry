@@ -15,9 +15,7 @@
 package publish
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1"
@@ -30,42 +28,21 @@ const (
 
 // demon is intentionally misspelled to avoid name collision (and drive Jon nuts).
 type demon struct {
-	wo             daemon.WriteOptions
-	namer          Namer
-	additionalTags []string
+	wo daemon.WriteOptions
 }
 
 // NewDaemon returns a new publish.Interface that publishes images to a container daemon.
-func NewDaemon(wo daemon.WriteOptions, namer Namer, additionalTags []string) Interface {
-	return &demon{wo, namer, additionalTags}
+func NewDaemon(wo daemon.WriteOptions) Interface {
+	return &demon{wo}
 }
 
 // Publish implements publish.Interface
-func (d *demon) Publish(img v1.Image, s string) (name.Reference, error) {
-	// https://github.com/google/go-containerregistry/issues/212
-	s = strings.ToLower(s)
-
-	h, err := img.Digest()
-	if err != nil {
+func (d *demon) Publish(img v1.Image, tag name.Tag) (name.Reference, error) {
+	log.Printf("Loading %v", tag)
+	if _, err := daemon.Write(tag, img, d.wo); err != nil {
 		return nil, err
 	}
+	log.Printf("Loaded %v", tag)
 
-	tagNames := append(d.additionalTags, h.Hex)
-	for _, tagName := range tagNames {
-		tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", LocalDomain, d.namer(s), tagName), name.WeakValidation)
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("Loading %v", tag)
-		if _, err := daemon.Write(tag, img, d.wo); err != nil {
-			return nil, err
-		}
-		log.Printf("Loaded %v", tag)
-	}
-
-	digestTag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", LocalDomain, d.namer(s), h.Hex), name.WeakValidation)
-	if err != nil {
-		return nil, err
-	}
-	return &digestTag, nil
+	return &tag, nil
 }

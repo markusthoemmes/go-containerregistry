@@ -82,19 +82,25 @@ func publishImages(importpaths []string, no *NameOptions, lo *LocalOptions, ta *
 			namer = packageWithMD5
 		}
 
-		if lo.Local || repoName == publish.LocalDomain {
-			pub = publish.NewDaemon(daemon.WriteOptions{}, namer, ta.Tags)
+		if lo.Local {
+			repoName = publish.LocalDomain
+		}
+
+		if repoName == publish.LocalDomain {
+			pub = publish.NewDaemon(daemon.WriteOptions{})
 		} else {
 			if _, err := name.NewRepository(repoName, name.WeakValidation); err != nil {
 				log.Fatalf("the environment variable KO_DOCKER_REPO must be set to a valid docker repository, got %v", err)
 			}
-			opts := []publish.Option{publish.WithAuthFromKeychain(authn.DefaultKeychain), publish.WithNamer(namer), publish.WithAdditionalTags(ta.Tags)}
+			opts := []publish.Option{publish.WithAuthFromKeychain(authn.DefaultKeychain)}
 			pub, err = publish.NewDefault(repoName, opts...)
 			if err != nil {
 				log.Fatalf("error setting up default image publisher: %v", err)
 			}
 		}
-		if _, err := pub.Publish(img, importpath); err != nil {
+		digest, err := img.Digest()
+		tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", repoName, namer(importpath), digest.Hex), name.WeakValidation)
+		if _, err := pub.Publish(img, tag); err != nil {
 			log.Fatalf("error publishing %s: %v", importpath, err)
 		}
 	}

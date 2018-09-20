@@ -15,10 +15,8 @@
 package publish
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -84,33 +82,11 @@ func NewDefault(base string, options ...Option) (Interface, error) {
 }
 
 // Publish implements publish.Interface
-func (d *defalt) Publish(img v1.Image, s string) (name.Reference, error) {
-	// https://github.com/google/go-containerregistry/issues/212
-	s = strings.ToLower(s)
-
-	// We push via tags (always latest) and then produce a digest because some registries do
-	// not support publishing by digest.
-	tags := append(d.additionalTags, "latest")
-	for _, tagName := range tags {
-		tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", d.base, d.namer(s), tagName), name.WeakValidation)
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("Publishing %v", tag)
-		if err := remote.Write(tag, img, d.auth, d.t, remote.WriteOptions{}); err != nil {
-			return nil, err
-		}
-		log.Printf("Published %v", tag)
-	}
-
-	h, err := img.Digest()
-	if err != nil {
+func (d *defalt) Publish(img v1.Image, tag name.Tag) (name.Reference, error) {
+	log.Printf("Publishing %v", tag)
+	if err := remote.Write(tag, img, d.auth, d.t, remote.WriteOptions{}); err != nil {
 		return nil, err
 	}
-	dig, err := name.NewDigest(fmt.Sprintf("%s/%s@%s", d.base, d.namer(s), h), name.WeakValidation)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Published %v", dig)
-	return &dig, nil
+	log.Printf("Published %v", tag)
+	return &tag, nil
 }

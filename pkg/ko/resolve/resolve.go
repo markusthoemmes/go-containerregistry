@@ -26,6 +26,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/ko/build"
 	"github.com/google/go-containerregistry/pkg/ko/publish"
+	"github.com/google/go-containerregistry/pkg/name"
 )
 
 // ImageReferences resolves supported references to images within the input yaml
@@ -66,6 +67,7 @@ func ImageReferences(input []byte, builder build.Interface, publisher publish.In
 			if err != nil {
 				return err
 			}
+			ref, err := name.NewTag(fmt.Sprintf("%s/%s:%s", "test", "testimage", "bla"), name.WeakValidation)
 			digest, err := publisher.Publish(img, ref)
 			if err != nil {
 				return err
