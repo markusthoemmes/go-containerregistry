@@ -44,7 +44,7 @@ func TestFixedPublish(t *testing.T) {
 		},
 	})
 
-	fooDigest, err := f.Publish(nil, "foo")
+	fooDigest, err := f.Publish(nil, "foo", "test")
 	if err != nil {
 		t.Errorf("Publish(foo) = %v", err)
 	}
@@ -52,7 +52,7 @@ func TestFixedPublish(t *testing.T) {
 		t.Errorf("Publish(foo) = %q, want %q", got, want)
 	}
 
-	barDigest, err := f.Publish(nil, "bar")
+	barDigest, err := f.Publish(nil, "bar", "test")
 	if err != nil {
 		t.Errorf("Publish(bar) = %v", err)
 	}
@@ -60,7 +60,7 @@ func TestFixedPublish(t *testing.T) {
 		t.Errorf("Publish(bar) = %q, want %q", got, want)
 	}
 
-	d, err := f.Publish(nil, "baz")
+	d, err := f.Publish(nil, "baz", "test")
 	if err == nil {
 		t.Errorf("Publish(baz) = %v, want error", d)
 	}
@@ -124,7 +124,7 @@ func newFixedPublish(base name.Repository, entries map[string]v1.Hash) publish.I
 }
 
 // Publish implements publish.Interface
-func (f *fixedPublish) Publish(_ v1.Image, s string) (name.Reference, error) {
+func (f *fixedPublish) Publish(_ v1.Image, s string, t string) (name.Reference, error) {
 	h, ok := f.entries[s]
 	if !ok {
 		return nil, fmt.Errorf("unsupported importpath: %q", s)

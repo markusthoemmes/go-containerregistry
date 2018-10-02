@@ -92,7 +92,15 @@ func publishImages(importpaths []string, no *NameOptions, lo *LocalOptions) {
 				log.Fatalf("error setting up default image publisher: %v", err)
 			}
 		}
-		if _, err := pub.Publish(img, importpath); err != nil {
+		if _, err := pub.Publish(img, importpath, "latest"); err != nil {
+			log.Fatalf("error publishing %s: %v", importpath, err)
+		}
+
+		digest, err := img.Digest()
+		if err != nil {
+			log.Fatalf("error generating digest for %s: %v", importpath, err)
+		}
+		if _, err := pub.Publish(img, importpath, digest.Hex); err != nil {
 			log.Fatalf("error publishing %s: %v", importpath, err)
 		}
 	}

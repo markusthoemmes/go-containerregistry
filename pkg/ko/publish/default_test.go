@@ -33,12 +33,15 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("random.Image() = %v", err)
 	}
+
 	base := "blah"
 	importpath := "github.com/Google/go-containerregistry/cmd/crane"
+	testtag := "testtag"
+
 	expectedRepo := fmt.Sprintf("%s/%s", base, strings.ToLower(importpath))
 	headPathPrefix := fmt.Sprintf("/v2/%s/blobs/", expectedRepo)
 	initiatePath := fmt.Sprintf("/v2/%s/blobs/uploads/", expectedRepo)
-	manifestPath := fmt.Sprintf("/v2/%s/manifests/latest", expectedRepo)
+	manifestPath := fmt.Sprintf("/v2/%s/manifests/%s", expectedRepo, testtag)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodHead && strings.HasPrefix(r.URL.Path, headPathPrefix) && r.URL.Path != initiatePath {
@@ -67,7 +70,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("url.Parse(%v) = %v", server.URL, err)
 	}
-	tag, err := name.NewTag(fmt.Sprintf("%s/%s:latest", u.Host, expectedRepo), name.WeakValidation)
+	tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", u.Host, expectedRepo, testtag), name.WeakValidation)
 	if err != nil {
 		t.Fatalf("NewTag() = %v", err)
 	}
@@ -77,7 +80,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewDefault() = %v", err)
 	}
-	if d, err := def.Publish(img, importpath); err != nil {
+	if d, err := def.Publish(img, importpath, testtag); err != nil {
 		t.Errorf("Publish() = %v", err)
 	} else if !strings.HasPrefix(d.String(), tag.Repository.String()) {
 		t.Errorf("Publish() = %v, wanted prefix %v", d, tag.Repository)
@@ -96,12 +99,15 @@ func TestDefaultWithCustomNamer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("random.Image() = %v", err)
 	}
+
 	base := "blah"
 	importpath := "github.com/Google/go-containerregistry/cmd/crane"
+	testtag := "testtag"
+
 	expectedRepo := fmt.Sprintf("%s/%s", base, md5Hash(strings.ToLower(importpath)))
 	headPathPrefix := fmt.Sprintf("/v2/%s/blobs/", expectedRepo)
 	initiatePath := fmt.Sprintf("/v2/%s/blobs/uploads/", expectedRepo)
-	manifestPath := fmt.Sprintf("/v2/%s/manifests/latest", expectedRepo)
+	manifestPath := fmt.Sprintf("/v2/%s/manifests/%s", expectedRepo, testtag)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodHead && strings.HasPrefix(r.URL.Path, headPathPrefix) && r.URL.Path != initiatePath {
@@ -130,7 +136,7 @@ func TestDefaultWithCustomNamer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("url.Parse(%v) = %v", server.URL, err)
 	}
-	tag, err := name.NewTag(fmt.Sprintf("%s/%s:latest", u.Host, expectedRepo), name.WeakValidation)
+	tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", u.Host, expectedRepo, testtag), name.WeakValidation)
 	if err != nil {
 		t.Fatalf("NewTag() = %v", err)
 	}
@@ -141,7 +147,7 @@ func TestDefaultWithCustomNamer(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewDefault() = %v", err)
 	}
-	if d, err := def.Publish(img, importpath); err != nil {
+	if d, err := def.Publish(img, importpath, testtag); err != nil {
 		t.Errorf("Publish() = %v", err)
 	} else if !strings.HasPrefix(d.String(), repoName) {
 		t.Errorf("Publish() = %v, wanted prefix %v", d, tag.Repository)

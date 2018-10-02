@@ -81,13 +81,12 @@ func NewDefault(base string, options ...Option) (Interface, error) {
 }
 
 // Publish implements publish.Interface
-func (d *defalt) Publish(img v1.Image, s string) (name.Reference, error) {
-	// https://github.com/google/go-containerregistry/issues/212
-	s = strings.ToLower(s)
+func (d *defalt) Publish(img v1.Image, s string, t string) (name.Reference, error) {
+	imageName := d.namer(strings.ToLower(s))
 
 	// We push via tag (always latest) and then produce a digest because some registries do
 	// not support publishing by digest.
-	tag, err := name.NewTag(fmt.Sprintf("%s/%s:latest", d.base, d.namer(s)), name.WeakValidation)
+	tag, err := name.NewTag(fmt.Sprintf("%s/%s:%s", d.base, imageName, t), name.WeakValidation)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func (d *defalt) Publish(img v1.Image, s string) (name.Reference, error) {
 	if err != nil {
 		return nil, err
 	}
-	dig, err := name.NewDigest(fmt.Sprintf("%s/%s@%s", d.base, d.namer(s), h), name.WeakValidation)
+	dig, err := name.NewDigest(fmt.Sprintf("%s/%s@%s", d.base, imageName, h), name.WeakValidation)
 	if err != nil {
 		return nil, err
 	}

@@ -333,7 +333,7 @@ func mustDigest(img v1.Image) v1.Hash {
 }
 
 func computeDigest(base name.Repository, ref string, h v1.Hash) string {
-	d, err := newFixedPublish(base, map[string]v1.Hash{ref: h}).Publish(nil, ref)
+	d, err := newFixedPublish(base, map[string]v1.Hash{ref: h}).Publish(nil, ref, "latest")
 	if err != nil {
 		panic(err)
 	}
